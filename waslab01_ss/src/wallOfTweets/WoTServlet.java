@@ -47,12 +47,14 @@ public class WoTServlet extends HttpServlet {
 		// This method does NOTHING but to redirect to the main page
 		String author = req.getParameter("author");
 		String text = req.getParameter("tweet_text");
+		String id = "";
 		try {
-			Database.insertTweet(author,text);
+			id = Long.toString(Database.insertTweet(author,text));
 		} catch (SQLException e) {
-		 System.out.println("Error a la inserció: " + e);
+			System.out.println("Error a la inserció: " + e);
 		}
-		res.sendRedirect("wot");
+		if (req.getHeader("Accept").equals("text/plain")) res.getWriter().print(id);
+		else res.sendRedirect("wot");
 
 	}
 
