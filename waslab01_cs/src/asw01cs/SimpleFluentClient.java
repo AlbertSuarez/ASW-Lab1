@@ -10,7 +10,7 @@ public class SimpleFluentClient {
     	
     	/* Insert code for Task #4 here */
     	
-    	System.out.println(Request.Get("http://localhost:8080/waslab01_ss").execute().returnContent());
+    	System.out.println(Request.Get("http://localhost:8080/waslab01_ss").addHeader("Accept","text/plain").execute().returnContent());
     	
     	/* Insert code for Task #5 here */
     }
