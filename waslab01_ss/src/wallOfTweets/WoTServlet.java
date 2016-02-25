@@ -53,6 +53,11 @@ public class WoTServlet extends HttpServlet {
 		} catch (SQLException e) {
 			System.out.println("Error a la inserció: " + e);
 		}
+		
+		// TODO No acaba de funcionar
+		/*String idDelete = req.getParameter("id");
+		Database.deleteTweet(Integer.parseInt(idDelete));*/
+		
 		if (req.getHeader("Accept").equals("text/plain")) res.getWriter().print(id);
 		else res.sendRedirect("wot");
 
@@ -89,6 +94,7 @@ public class WoTServlet extends HttpServlet {
 			out.println("<div class=\"wallitem\">");
 			out.println("<h4><em>" + tweet.getAuthor() + "</em> @ "+ timeFormatter.format(tweet.getDate()) +"</h4>");
 			out.println("<p>" + tweet.getText() + "</p>");
+			out.println("<td><input type=\"submit\" name=\"action\" value=\"Delete\"></td>");
 			out.println("</div>");
 		}
 		out.println ( "</body></html>" );

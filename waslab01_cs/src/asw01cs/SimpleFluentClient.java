@@ -17,6 +17,11 @@ public class SimpleFluentClient {
 
     	
     	/* Insert code for Task #5 here */
+    	
+    	// TODO Primera idea de com ferho
+    	/*Request.Delete("http://localhost:8080/waslab01_ss/wot")
+    		.bodyForm(Form.form().add("id", "1").build())
+    		.addHeader("Accept", "text/plain").execute().returnContent();*/
     }
 }
 
