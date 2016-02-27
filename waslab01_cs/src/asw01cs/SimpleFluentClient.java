@@ -11,7 +11,7 @@ public class SimpleFluentClient {
     	
     	/* Insert code for Task #4 here */
     	System.out.println(Request.Post("http://localhost:8080/waslab01_ss/wot")
-    	        .bodyForm(Form.form().add("author", "Cervantes").add("tweet_text",  "holiiii").build())
+    	        .bodyForm(Form.form().add("author", "Cervantes").add("tweet_text",  "holiiii").add("action","Delete").build())
     	        .addHeader("Accept","text/plain").execute().returnContent());
     	System.out.println(Request.Get("http://localhost:8080/waslab01_ss").addHeader("Accept","text/plain").execute().returnContent());
 

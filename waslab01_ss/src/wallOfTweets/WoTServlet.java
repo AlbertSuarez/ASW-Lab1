@@ -13,6 +13,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.sun.org.apache.xml.internal.security.utils.Base64;
+
 
 public class WoTServlet extends HttpServlet {
 
@@ -47,9 +49,11 @@ public class WoTServlet extends HttpServlet {
 		// This method does NOTHING but to redirect to the main page
 		String author = req.getParameter("author");
 		String text = req.getParameter("tweet_text");
+		String action = req.getParameter("action");
+		System.out.println(action);
 		String id = "";
 		try {
-			id = Long.toString(Database.insertTweet(author,text));
+			id = Base64.encode(Long.toString(Database.insertTweet(author,text)).getBytes());
 		} catch (SQLException e) {
 			System.out.println("Error a la inserció: " + e);
 		}
@@ -94,7 +98,7 @@ public class WoTServlet extends HttpServlet {
 			out.println("<div class=\"wallitem\">");
 			out.println("<h4><em>" + tweet.getAuthor() + "</em> @ "+ timeFormatter.format(tweet.getDate()) +"</h4>");
 			out.println("<p>" + tweet.getText() + "</p>");
-			out.println("<td><input type=\"submit\" name=\"action\" value=\"Delete\"></td>");
+			out.println("<td><input type=\"submit\" name=\"action\" value=\"Delete\"></td></tr>");
 			out.println("</div>");
 		}
 		out.println ( "</body></html>" );
