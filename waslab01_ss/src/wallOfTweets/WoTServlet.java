@@ -9,6 +9,7 @@ import java.util.Locale;
 import java.util.Vector;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,26 +46,29 @@ public class WoTServlet extends HttpServlet {
 	@Override
 	public void doPost (HttpServletRequest req, HttpServletResponse res)
 			throws ServletException, IOException {
+		String id = accio(req, res);
+		if (req.getHeader("Accept").equals("text/plain")) res.getWriter().print(id);
+		else res.sendRedirect("wot");
 
-		// This method does NOTHING but to redirect to the main page
+	}
+
+	private String accio(HttpServletRequest req, HttpServletResponse res) {
+		String action = req.getParameter("action");
 		String author = req.getParameter("author");
 		String text = req.getParameter("tweet_text");
-		String action = req.getParameter("action");
 		System.out.println(action);
 		String id = "";
 		try {
 			id = Base64.encode(Long.toString(Database.insertTweet(author,text)).getBytes());
+			//creació de cookie
+			Cookie cookie = new Cookie("key",id);
+			cookie.setMaxAge(60*60*24);
+			res.addCookie(cookie);
+		
 		} catch (SQLException e) {
 			System.out.println("Error a la inserciÃ³: " + e);
 		}
-		
-		// TODO No acaba de funcionar
-		/*String idDelete = req.getParameter("id");
-		Database.deleteTweet(Integer.parseInt(idDelete));*/
-		
-		if (req.getHeader("Accept").equals("text/plain")) res.getWriter().print(id);
-		else res.sendRedirect("wot");
-
+		return id;
 	}
 
 	private void printHTMLresult (Vector<Tweet> tweets, HttpServletRequest req, HttpServletResponse res) throws IOException
