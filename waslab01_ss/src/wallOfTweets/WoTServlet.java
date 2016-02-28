@@ -54,21 +54,30 @@ public class WoTServlet extends HttpServlet {
 
 	private String accio(HttpServletRequest req, HttpServletResponse res) {
 		String action = req.getParameter("action");
-		String author = req.getParameter("author");
-		String text = req.getParameter("tweet_text");
 		System.out.println(action);
-		String id = "";
+		Long id = null;
 		try {
-			id = Base64.encode(Long.toString(Database.insertTweet(author,text)).getBytes());
-			//creació de cookie
-			Cookie cookie = new Cookie("key",id);
-			cookie.setMaxAge(60*60*24);
-			res.addCookie(cookie);
-		
+			if(action.equals("Tweet!") || 
+					req.getHeader("Accept").equals("text/plain")){
+				
+				String author = req.getParameter("author");
+				String text = req.getParameter("tweet_text");
+				
+				id = Database.insertTweet(author,text);
+				
+				//creació de cookie
+				Cookie cookie = new Cookie("key",Base64.encode(id.toString().getBytes()));
+				cookie.setMaxAge(60*60*24);
+				res.addCookie(cookie);
+			}
+			if(action.equals("Delete")){
+				Database.deleteTweet(id);
+			}
+			
 		} catch (SQLException e) {
 			System.out.println("Error a la inserciÃ³: " + e);
 		}
-		return id;
+		return id.toString();
 	}
 
 	private void printHTMLresult (Vector<Tweet> tweets, HttpServletRequest req, HttpServletResponse res) throws IOException
