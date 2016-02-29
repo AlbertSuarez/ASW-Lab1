@@ -1,32 +1,27 @@
-
 package wallOfTweets;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.security.MessageDigest;
 import java.sql.SQLException;
 import java.text.DateFormat;
+import java.util.Base64;
 import java.util.Locale;
 import java.util.Vector;
-
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.sun.org.apache.xml.internal.security.utils.Base64;
-
 
 public class WoTServlet extends HttpServlet {
 
-
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -5207702297571272100L;
 	Locale currentLocale = new Locale("en");
 	String ENCODING = "ISO-8859-1";
-
 
 	@Override
 	public void doGet (HttpServletRequest req, HttpServletResponse res)
@@ -46,40 +41,66 @@ public class WoTServlet extends HttpServlet {
 	@Override
 	public void doPost (HttpServletRequest req, HttpServletResponse res)
 			throws ServletException, IOException {
-		String id = accio(req, res);
-		if (req.getHeader("Accept").equals("text/plain")) res.getWriter().print(id);
-		else res.sendRedirect("wot");
 
-	}
-
-	private String accio(HttpServletRequest req, HttpServletResponse res) {
-		String action = req.getParameter("action");
-		System.out.println(action);
-		Long id = null;
-		try {
-			if(action.equals("Tweet!") || 
-					req.getHeader("Accept").equals("text/plain")){
-				
-				String author = req.getParameter("author");
-				String text = req.getParameter("tweet_text");
-				
-				id = Database.insertTweet(author,text);
-				
-				//creaci� de cookie
-				Cookie cookie = new Cookie("key",Base64.encode(id.toString().getBytes()));
-				cookie.setMaxAge(60*60*24);
-				res.addCookie(cookie);
-			}
-			if(action.equals("Delete")){
-				Database.deleteTweet(id);
-			}
+		Cookie[] cookiesList = req.getCookies();
 			
-		} catch (SQLException e) {
-			System.out.println("Error a la inserció: " + e);
+		String author = req.getParameter("author");
+		String text = req.getParameter("tweet_text");
+		String delete = req.getParameter("deleteTweetID");		
+		
+		String cookieName = "tweetIdCookie";
+		Long tweetID = null;
+		
+		try {
+			if (delete != null){
+				if (cookiesList != null)
+				    for (int i=0; i < cookiesList.length; i++) {
+				        Cookie cookie = cookiesList[i];				        
+				        if (cookie.getName().startsWith(cookieName) &&
+				        		desxifra(Base64.getDecoder().decode(cookie.getValue().getBytes("utf-8"))).equals(delete))
+			            	Database.deleteTweet(Long.parseLong(delete));
+				    }
+				else Database.deleteTweet(Long.parseLong(delete)); 
+			}
+			else {
+				tweetID = Database.insertTweet(author, text);
+				int number = 0;
+				if (cookiesList != null) number = cookiesList.length;
+				res.addCookie(new Cookie(cookieName + number , new String(Base64.getEncoder().encode(xifra(Long.toString(tweetID))))));
+			}
 		}
-		return id.toString();
+		
+		catch (Exception e) {
+			System.out.println("Error:" + e);
+		}
+		 
+		if (req.getHeader("Accept").equals("text/plain")) res.getWriter().print(tweetID);
+		else res.sendRedirect("wot");
 	}
-
+ 
+	public byte[] xifra(String perXifrar) throws Exception {
+		return getCipher(true).doFinal(perXifrar.getBytes("UTF-8"));
+	}
+	
+	public String desxifra(byte[] perDesxifrar) throws Exception {
+		return new String(getCipher(false).doFinal(perDesxifrar), "UTF-8");
+	}
+	
+	private Cipher getCipher(boolean xifrarOnoXifrar) throws Exception {
+		final String frase = "FraseLargaConDiferentesLetrasNumerosYCaracteresEspeciales_áÁéÉíÍóÓúÚüÜñÑ1234567890!#%$&()=%_NO_USAR_ESTA_FRASE!_";
+		
+		final MessageDigest digest = MessageDigest.getInstance("SHA");
+		digest.update(frase.getBytes("UTF-8"));
+		final SecretKeySpec key = new SecretKeySpec(digest.digest(), 0, 16, "AES");
+	
+		final Cipher aes = Cipher.getInstance("AES/ECB/PKCS5Padding");
+		
+		if (xifrarOnoXifrar) aes.init(Cipher.ENCRYPT_MODE, key);
+		else aes.init(Cipher.DECRYPT_MODE, key);
+	
+		return aes;
+	}
+	
 	private void printHTMLresult (Vector<Tweet> tweets, HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
 		DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.FULL, currentLocale);
@@ -111,8 +132,9 @@ public class WoTServlet extends HttpServlet {
 			out.println("<div class=\"wallitem\">");
 			out.println("<h4><em>" + tweet.getAuthor() + "</em> @ "+ timeFormatter.format(tweet.getDate()) +"</h4>");
 			out.println("<p>" + tweet.getText() + "</p>");
-			out.println("<input type=\"submit\" name=\"action\" value=\"Delete\">");
-			out.println("<br></br>");
+			out.println("<form action=\"wot\" method=\"post\">");
+			out.println("<input type=\"hidden\" name=\"deleteTweetID\" value=" + tweet.getTwid() + ">");
+			out.println("<td><input type=\"submit\" name=\"action\" value=\"Delete!\"></td></tr></form>");
 			out.println("</div>");
 		}
 		out.println ( "</body></html>" );
